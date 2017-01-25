@@ -1,76 +1,51 @@
-//libraries on iMac
+
+
 
 #include <Wire.h>
-#include <LCD.h>
-#include <LiquidCrystal_I2C.h>
-int sensorPin = A0;
-int sensorValue = 0;  // variable to store the value coming from the sensor
-int sensorPercentage = 0;
-
-
-#define I2C_ADDR    0x27// <<----- Add your address here.  Find it from I2C Scanner
+#include "LCD.h"
+#include "LiquidCrystal_I2C.h"
+#define I2C_ADDR    0x27 // <<----- Add your address here.  Find it from I2C Scanner
 #define BACKLIGHT_PIN     3
-#define En_pin  2
+#define En_pin  2g
 #define Rw_pin  1
 #define Rs_pin  0
 #define D4_pin  4
 #define D5_pin  5
 #define D6_pin  6
 #define D7_pin  7
-
 int n = 1;
-
 LiquidCrystal_I2C  lcd(I2C_ADDR, En_pin, Rw_pin, Rs_pin, D4_pin, D5_pin, D6_pin, D7_pin);
 
+int sensorPin = A0;
+int sensorValue = 0;  // variable to store the value coming from the sensor
+int sensorPercentage = 0;
+
+int redPin = 1;
+int greenPin = 3;
+int bluePin = 4;
+
+int solonoidPin = 11;
 void setup()
 
 {
   lcd.setBacklightPin(BACKLIGHT_PIN, POSITIVE);
   lcd.setBacklight(HIGH);
   Serial.begin(9600);
-  //pinMode(9, OUTPUT);//????Did I do that right????
-  pinMode(8, OUTPUT);
-  pinMode(13, OUTPUT);
   lcd.begin(16, 2);// set up the LCD's number of columns and rows:
-  lcd.print("Setup In Progress"); // Print a message to the LCD.
-  delay(1500);
-  lcd.setBacklight(LOW);
-  delay(1000);
-  lcd.setBacklight(HIGH);
-  delay(1000);
-  lcd.setBacklight(LOW);
-  delay(1500);
-  lcd.setBacklight(HIGH);
-  delay(1000);
-  lcd.setBacklight(LOW);
-  delay(1500);
-  lcd.setBacklight(HIGH);
-  delay(1000);
-  lcd.setBacklight(LOW);
-  delay(1500);
-  lcd.setBacklight(HIGH);
-  delay(1000);
-  lcd.setBacklight(LOW);
-  delay(1500);
-  lcd.setBacklight(HIGH);
-  delay(1500);
-  lcd.setBacklight(LOW);
-  delay(1500);
-  lcd.clear();
-  lcd.print("jk lol that was");
-  lcd.setCursor(0, 1);
-  lcd.print("pointless");
-  lcd.setBacklight(HIGH);
-  delay(4000);
-  lcd.clear();
+
+  pinMode(redPin, OUTPUT);
+  pinMode(greenPin, OUTPUT);
+  pinMode(bluePin, OUTPUT);
+  pinMode(solonoidPin, OUTPUT);
+
 }
 
 void loop()
 {
- 
   // read the value from the sensor:
   sensorValue = analogRead(sensorPin);
   sensorPercentage = ((1023 - sensorValue) / 10.23);
+
   Serial.print("sensor = " );
   Serial.println(sensorPercentage);
   lcd.setCursor(0, 1);
@@ -78,7 +53,6 @@ void loop()
   lcd.print(sensorPercentage);
   lcd.print("%        ");
   delay(350);
-  
 
 
   if (sensorPercentage < 30) {
@@ -86,7 +60,8 @@ void loop()
     Serial.println("Water On");
     digitalWrite(9, HIGH);//if water level is below desired percentage, send power to solenoid
     lcd.print("Water On    ");
-    
+    setColor(0, 255, 0);
+    digitalWrite(11, LOW);
   }
   else
   {
@@ -95,22 +70,22 @@ void loop()
     Serial.println("Water Off");
     digitalWrite(9, LOW);//if water level is at desired percentage, shut off power to the solenoid
     lcd.print("Water Off");
+    setColor(0, 0, 255);
+     digitalWrite(11, HIGH);
   }
-
-  
-  
 }
 
-/*
-  keep arduino/solonoid/moisture sensor near garden, run power cord to power source
-
-  usde transistor + MAKE SURE TO USE DIODE or might ruin arduino with negitive surge when powering off
-
-  if statement switch state; if button pressed, switch from water on/off and moisture to temp/humidity
-
-  build bigger breadbard
-
-  3D Design
-
-  PCB Design
-*/
+void setColor(int red, int green, int blue)
+{
+#ifdef COMMON_ANODE
+  red = 255 - red;
+  green = 255 - green;
+  blue = 255 - blue;
+#endif
+  analogWrite(redPin, red);
+  delay(1000);
+  analogWrite(greenPin, green);
+  delay(1000);
+  analogWrite(bluePin, blue);
+  delay(1000);
+}
